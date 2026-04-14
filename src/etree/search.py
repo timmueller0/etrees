@@ -10,13 +10,21 @@ import pandas as pd
 
 from etree.ast import Expr, pretty
 from etree.eval import EvaluationError, evaluate
-from etree.generate import deduplicate_by_signature, generate_trees
+from etree.generate import GenerationStats, deduplicate_by_signature, generate_trees, generate_trees_with_stats
 
 
 @dataclass(frozen=True)
 class SearchResult:
     expr: Expr
     mse: float
+
+
+@dataclass(frozen=True)
+class SearchReport:
+    """Search outputs including optional generation diagnostics."""
+
+    results: tuple[SearchResult, ...]
+    generation_stats: GenerationStats
 
 
 def mse(y_true: np.ndarray, y_pred: np.ndarray) -> float:
@@ -52,6 +60,25 @@ def shallow_search(
         candidates = deduplicate_by_signature(candidates, x_grid=x_grid)
     ranked = rank_candidates(candidates, x_grid=x_grid, y_target=y_target)
     return ranked[:top_k]
+
+
+def shallow_search_with_report(
+    x_grid: np.ndarray,
+    y_target: np.ndarray,
+    max_depth: int = 3,
+    top_k: int = 5,
+    dedupe_signatures: bool = True,
+) -> SearchReport:
+    """Run shallow search and include generation telemetry."""
+    candidates, stats = generate_trees_with_stats(
+        max_depth=max_depth,
+        x_grid=x_grid,
+        dedupe_signatures=dedupe_signatures,
+    )
+    if dedupe_signatures:
+        candidates = deduplicate_by_signature(candidates, x_grid=x_grid)
+    ranked = rank_candidates(candidates, x_grid=x_grid, y_target=y_target)
+    return SearchReport(results=tuple(ranked[:top_k]), generation_stats=stats)
 
 
 def results_to_frame(results: Sequence[SearchResult]) -> pd.DataFrame:

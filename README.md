@@ -34,6 +34,11 @@ The project focuses on fast iteration for early-stage symbolic-expression experi
 - Similarity via multiset-Jaccard overlap.
 - Baseline naive token-set similarity for contrast.
 
+### 4) Benchmarking and diagnostics
+- Per-depth generation telemetry via `generate_trees_with_stats`.
+- Search reports that include growth diagnostics (`shallow_search_with_report`).
+- Recovery benchmark harness (`RecoveryCase`, `run_recovery_suite`).
+
 ## Project layout
 
 ```text
@@ -47,6 +52,8 @@ etree/
     eval.py
     generate.py
     search.py
+    benchmarks.py
+    canonicalize.py
     features.py
     utils.py
   tests/
@@ -74,6 +81,8 @@ Run demos:
 ```bash
 python examples/recover_native_expression.py
 python examples/toy_espace_demo.py
+python examples/benchmark_growth.py
+python examples/run_recovery_benchmark.py
 ```
 
 ## Notes on design
