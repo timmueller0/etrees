@@ -19,4 +19,5 @@ def test_recovery_case_runs_all_regimes() -> None:
     }
     e_only = next(row for row in out if row.regime == "e_only")
     assert e_only.exact_recovered is True
-    assert e_only.best_mse < 1e-10
+    assert e_only.top1_mse < 1e-10
+    assert e_only.candidates_generated >= e_only.candidates_valid
