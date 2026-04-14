@@ -1,7 +1,8 @@
 """etree: exploratory E-logic / E-tree research prototype."""
 
 from etree.ast import AffineLeaf, Constant, ENode, Expr, Variable, depth, pretty, size, subtrees
-from etree.benchmarks import RecoveryCase, RecoveryResult, run_recovery_case, run_recovery_suite
+from etree.benchmark_registry import BENCHMARK_REGISTRY, get_benchmark_registry
+from etree.benchmarks import Family, RecoveryCase, RecoveryResult, Tier, run_recovery_case, run_recovery_suite
 from etree.canonicalize import canonical_string
 from etree.eval import DomainError, EvaluationError, NonFiniteError, evaluate
 from etree.generate import DepthStats, GenerationStats, generate_trees_with_stats
@@ -38,8 +39,12 @@ __all__ = [
     "shallow_search",
     "shallow_search_with_report",
     "hybrid_search_with_affine_input",
+    "Tier",
+    "Family",
     "RecoveryCase",
     "RecoveryResult",
+    "BENCHMARK_REGISTRY",
+    "get_benchmark_registry",
     "run_recovery_case",
     "run_recovery_suite",
 ]
