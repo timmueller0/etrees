@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from etree.ast import Constant, ENode, Expr, Variable
+from etree.ast import AffineLeaf, Constant, ENode, Expr, Variable
 
 
 def _format_constant(value: float) -> str:
@@ -18,6 +18,8 @@ def canonical_string(expr: Expr) -> str:
         return f"Var({expr.name})"
     if isinstance(expr, Constant):
         return f"Const({_format_constant(expr.value)})"
+    if isinstance(expr, AffineLeaf):
+        return f"Affine({expr.variable},{_format_constant(expr.a)},{_format_constant(expr.b)})"
     if isinstance(expr, ENode):
         left = canonical_string(expr.left)
         right = canonical_string(expr.right)

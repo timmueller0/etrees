@@ -29,17 +29,17 @@ def main() -> None:
 
     for row in results:
         print(
-            f"{row.target_name:28s} tier={row.tier:24s} family={row.target_family:22s} "
+            f"{row.target_name:28s} regime={row.regime:21s} tier={row.tier:24s} family={row.target_family:22s} "
             f"match={row.match_category:9s} top1_mse={row.top1_mse:.3e} expr={row.top1_expr}"
         )
 
-    by_tier: dict[str, list[float]] = defaultdict(list)
+    by_group: dict[tuple[str, str], list[float]] = defaultdict(list)
     for row in results:
-        by_tier[row.tier].append(row.top1_mse)
+        by_group[(row.tier, row.regime)].append(row.top1_mse)
 
-    print("\nSummary by tier (mean best MSE)")
-    for tier, mses in by_tier.items():
-        print(f"  {tier:24s} {sum(mses) / len(mses):.3e}")
+    print("\nSummary by tier/regime (mean best MSE)")
+    for (tier, regime), mses in sorted(by_group.items()):
+        print(f"  {tier:24s} {regime:21s} {sum(mses) / len(mses):.3e}")
 
 
 if __name__ == "__main__":

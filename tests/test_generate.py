@@ -22,3 +22,12 @@ def test_generation_stats_include_expected_depth_rows() -> None:
     assert stats.per_depth[1].generated == 4
     assert stats.per_depth[0].deduplicated <= stats.per_depth[0].valid
     assert stats.per_depth[1].deduplicated <= stats.per_depth[1].valid
+
+
+
+def test_generation_e_plus_affine_leaf_regime_has_more_leaves() -> None:
+    e_only = generate_trees(max_depth=1, leaf_regime="e_only")
+    e_plus = generate_trees(max_depth=1, leaf_regime="e_plus_affine")
+
+    assert len(e_only) == 2
+    assert len(e_plus) > len(e_only)
