@@ -11,6 +11,7 @@ __all__ = [
     "Expr",
     "Variable",
     "Constant",
+    "AffineLeaf",
     "ENode",
     "pretty",
     "canonical_string",

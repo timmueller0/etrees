@@ -14,6 +14,7 @@ The project focuses on fast iteration for early-stage symbolic-expression experi
 - A small AST with:
   - `Variable(name)`
   - `Constant(value)`
+  - `AffineLeaf(variable, a, b)` for `a*x+b`
   - `ENode(left, right)`
 - Utilities for:
   - pretty-printing
@@ -28,6 +29,7 @@ The project focuses on fast iteration for early-stage symbolic-expression experi
 - Exhaustive tree generation up to configurable depth.
 - Optional signature deduplication using sampled outputs.
 - Shallow search that ranks formulas by MSE against target samples.
+- Hybrid search mode: structural brute force + affine input transform sweep (`x' = a*x + b`).
 
 ### 3) Retrieval / representation experiments
 - Subtree-multiset features for each formula.
@@ -65,6 +67,9 @@ etree/
   examples/
     recover_native_expression.py
     toy_espace_demo.py
+    benchmark_growth.py
+    run_recovery_benchmark.py
+    hybrid_affine_search_demo.py
 ```
 
 ## Quick start

@@ -8,7 +8,8 @@ from typing import Sequence
 
 import numpy as np
 
-from etree.ast import Constant, ENode, Expr, Variable, depth
+from etree.ast import AffineLeaf, Constant, ENode, Expr, Variable, depth
+from etree.canonicalize import canonical_string
 from etree.eval import EvaluationError, evaluate
 
 
@@ -36,7 +37,37 @@ def default_leaves() -> list[Expr]:
     return [Variable("x"), Constant(1.0)]
 
 
-def generate_trees(max_depth: int, leaves: Sequence[Expr] | None = None) -> list[Expr]:
+def affine_leaves(
+    variable: str = "x",
+    slopes: Iterable[float] = (-2.0, -1.0, 0.5, 1.0, 2.0),
+    intercepts: Iterable[float] = (-1.0, 0.0, 1.0),
+) -> list[AffineLeaf]:
+    """Construct a discrete affine leaf bank for parameterized-leaf sweeps."""
+    out: list[AffineLeaf] = []
+    for a in slopes:
+        for b in intercepts:
+            out.append(AffineLeaf(variable=variable, a=float(a), b=float(b)))
+    return out
+
+
+def deduplicate_by_structure(exprs: Sequence[Expr]) -> list[Expr]:
+    """Deduplicate expressions using canonical structural serialization."""
+    kept: list[Expr] = []
+    seen: set[str] = set()
+    for expr in exprs:
+        key = canonical_string(expr)
+        if key in seen:
+            continue
+        seen.add(key)
+        kept.append(expr)
+    return kept
+
+
+def generate_trees(
+    max_depth: int,
+    leaves: Sequence[Expr] | None = None,
+    dedupe_structure: bool = True,
+) -> list[Expr]:
     """Generate all E-trees with depth <= max_depth."""
     exprs, _ = generate_trees_with_stats(max_depth=max_depth, leaves=leaves)
     return exprs
@@ -58,6 +89,9 @@ def generate_trees_with_stats(
         return [], GenerationStats(per_depth=tuple())
 
     leaves = list(leaves) if leaves is not None else default_leaves()
+    if dedupe_structure:
+        leaves = deduplicate_by_structure(leaves)
+
     by_depth: dict[int, list[Expr]] = {1: list(leaves)}
     depth_rows: list[DepthStats] = []
 
@@ -80,6 +114,10 @@ def generate_trees_with_stats(
                 node = ENode(left, right)
                 if depth(node) == d:
                     current.append(node)
+
+        if dedupe_structure:
+            current = deduplicate_by_structure(current)
+
         by_depth[d] = current
 
         valid, deduped = _quality_counts(
