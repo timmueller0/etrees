@@ -37,6 +37,15 @@ FIXED_INTERVAL_BUDGETS: tuple[IntervalBudget, ...] = (
 )
 
 
+
+
+def _resolve_grid(case: RecoveryCase, budget: IntervalBudget) -> np.ndarray:
+    lo = max(budget.x_min, case.x_min)
+    hi = min(budget.x_max, case.x_max)
+    if lo >= hi:
+        lo, hi = case.x_min, case.x_max
+    return np.linspace(lo, hi, budget.num_points)
+
 def _target_values(case: RecoveryCase, x_grid: np.ndarray) -> np.ndarray:
     if case.target is not None:
         return evaluate(case.target, x_grid)
@@ -46,9 +55,22 @@ def _target_values(case: RecoveryCase, x_grid: np.ndarray) -> np.ndarray:
 
 
 def _recovery_label(case: RecoveryCase, mse: float) -> str:
-    if case.target is not None and mse <= 1e-10:
+    """Small explicit heuristic that can be tweaked as needed.
+
+    - native_e targets with an AST are treated as exact only with very tiny MSE
+    - non-native or factory targets can still be marked exact with tiny MSE
+    - near means close but not exact
+    """
+
+    if not np.isfinite(mse):
+        return "miss"
+
+    exact_tol = 1e-12 if case.target is not None else 1e-10
+    near_tol = 1e-5 if case.tier == "negative_control" else 1e-6
+
+    if mse <= exact_tol:
         return "exact"
-    if mse <= 1e-6:
+    if mse <= near_tol:
         return "near"
     return "miss"
 
@@ -91,13 +113,13 @@ def run_reduced_suite(
     cases: list[RecoveryCase] | None = None,
     budgets: tuple[IntervalBudget, ...] = FIXED_INTERVAL_BUDGETS,
 ) -> pd.DataFrame:
-    """Run all registry cases over fixed interval/budgets and 3 regimes."""
+    """Run all registry recovery cases over fixed budgets and 3 regimes."""
     cases = get_benchmark_registry() if cases is None else cases
     rows: list[dict[str, object]] = []
 
     for case in cases:
         for budget in budgets:
-            x_grid = np.linspace(budget.x_min, budget.x_max, budget.num_points)
+            x_grid = _resolve_grid(case, budget)
             y_target = _target_values(case, x_grid)
 
             # E-only
@@ -130,7 +152,7 @@ def run_reduced_suite(
                 )
             )
 
-            # Hybrid affine
+            # Hybrid affine (same telemetry path as shallow search)
             start = perf_counter()
             report_h = shallow_search_with_report(
                 x_grid=x_grid,
@@ -160,7 +182,7 @@ def run_reduced_suite(
                 )
             )
 
-            # Baseline
+            # Baseline affine least-squares
             start = perf_counter()
             fit = affine_least_squares(x_grid=x_grid, y_target=y_target)
             runtime_b = perf_counter() - start

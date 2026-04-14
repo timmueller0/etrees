@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-from datetime import datetime, timezone
 from pathlib import Path
 
 from etree.reduced_benchmark import run_reduced_suite
@@ -18,9 +17,13 @@ def main() -> None:
     args.out.parent.mkdir(parents=True, exist_ok=True)
     frame.to_csv(args.out, index=False)
 
-    stamp = datetime.now(timezone.utc).isoformat()
-    print(f"wrote {len(frame)} rows to {args.out} at {stamp}")
-    print(frame.head(12).to_string(index=False))
+    regimes = sorted(frame["regime"].unique().tolist())
+    families = sorted(frame["family"].unique().tolist())
+
+    print(f"output_path: {args.out}")
+    print(f"rows: {len(frame)}")
+    print(f"regimes: {', '.join(regimes)}")
+    print(f"families: {', '.join(families)}")
 
 
 if __name__ == "__main__":
