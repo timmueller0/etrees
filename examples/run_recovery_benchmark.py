@@ -6,7 +6,7 @@ from etree.ast import Constant, ENode, Variable
 from etree.benchmarks import RecoveryCase, run_recovery_suite
 
 
-if __name__ == "__main__":
+def main() -> None:
     x = Variable("x")
     one = Constant(1.0)
 
@@ -21,3 +21,7 @@ if __name__ == "__main__":
         print(
             f"{row.name}: exact={row.exact_recovered} best_mse={row.best_mse:.3e} expr={row.best_expr}"
         )
+
+
+if __name__ == "__main__":
+    main()

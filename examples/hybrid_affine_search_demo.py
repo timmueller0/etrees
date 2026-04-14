@@ -9,7 +9,7 @@ from etree.eval import evaluate
 from etree.search import hybrid_search_with_affine_input
 
 
-if __name__ == "__main__":
+def main() -> None:
     x = np.linspace(-0.6, 0.6, 60)
     base = ENode(Variable("x"), Constant(1.0))
     y = evaluate(base, 2.0 * x + 1.0)
@@ -25,3 +25,7 @@ if __name__ == "__main__":
 
     for r in results[:3]:
         print(f"mse={r.mse:.3e}\ta={r.a}\tb={r.b}\texpr={r.expr}")
+
+
+if __name__ == "__main__":
+    main()
