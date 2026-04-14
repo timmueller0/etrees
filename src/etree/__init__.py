@@ -1,6 +1,6 @@
 """etree: exploratory E-logic / E-tree research prototype."""
 
-from etree.ast import Constant, ENode, Expr, Variable, depth, pretty, size, subtrees
+from etree.ast import AffineLeaf, Constant, ENode, Expr, Variable, depth, pretty, size, subtrees
 from etree.benchmarks import RecoveryCase, RecoveryResult, run_recovery_case, run_recovery_suite
 from etree.canonicalize import canonical_string
 from etree.eval import DomainError, EvaluationError, NonFiniteError, evaluate
