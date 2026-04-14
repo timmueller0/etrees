@@ -88,6 +88,7 @@ python examples/recover_native_expression.py
 python examples/toy_espace_demo.py
 python examples/benchmark_growth.py
 python examples/run_recovery_benchmark.py
+python examples/hybrid_affine_search_demo.py
 ```
 
 ## Notes on design

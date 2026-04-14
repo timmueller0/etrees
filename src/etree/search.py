@@ -21,6 +21,14 @@ class SearchResult:
 
 
 @dataclass(frozen=True)
+class HybridSearchResult:
+    expr: Expr
+    mse: float
+    a: float
+    b: float
+
+
+@dataclass(frozen=True)
 class SearchReport:
     """Search outputs including optional generation diagnostics."""
 
@@ -80,6 +88,35 @@ def shallow_search_with_report(
         candidates = deduplicate_by_signature(candidates, x_grid=x_grid)
     ranked = rank_candidates(candidates, x_grid=x_grid, y_target=y_target)
     return SearchReport(results=tuple(ranked[:top_k]), generation_stats=stats)
+
+
+def hybrid_search_with_affine_input(
+    x_grid: np.ndarray,
+    y_target: np.ndarray,
+    max_depth: int,
+    top_k: int,
+    a_grid: Iterable[float],
+    b_grid: Iterable[float],
+    dedupe_signatures: bool = True,
+) -> list[HybridSearchResult]:
+    """Search expressions while sweeping affine input transforms x' = a*x + b."""
+    candidates = generate_trees(max_depth=max_depth)
+    ranked: list[HybridSearchResult] = []
+
+    for a, b in product(a_grid, b_grid):
+        x_aff = a * x_grid + b
+        current_candidates = candidates
+        if dedupe_signatures:
+            current_candidates = deduplicate_by_signature(current_candidates, x_grid=x_aff)
+        for expr in current_candidates:
+            try:
+                y_pred = evaluate(expr, x_aff)
+            except EvaluationError:
+                continue
+            ranked.append(HybridSearchResult(expr=expr, mse=mse(y_target, y_pred), a=float(a), b=float(b)))
+
+    ranked.sort(key=lambda r: r.mse)
+    return ranked[:top_k]
 
 
 def results_to_frame(results: Sequence[SearchResult]) -> pd.DataFrame:
