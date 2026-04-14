@@ -24,6 +24,6 @@ def test_non_native_case_uses_target_factory_path() -> None:
 
     out = run_recovery_case(case)
 
-    assert out.name == case.name
+    assert out.target_name == case.name
     assert out.tier == "compressible_non_native"
     assert out.exact_recovered is False

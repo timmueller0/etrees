@@ -8,6 +8,8 @@ def test_recovery_case_reports_exact_match_for_simple_target() -> None:
 
     out = run_recovery_case(case)
 
-    assert out.name == "simple"
+    assert out.target_name == "simple"
     assert out.exact_recovered is True
-    assert out.best_mse < 1e-10
+    assert out.match_category == "exact"
+    assert out.top1_mse < 1e-10
+    assert out.candidates_generated >= out.candidates_valid
