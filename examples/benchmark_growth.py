@@ -7,7 +7,7 @@ import numpy as np
 from etree.generate import generate_trees_with_stats
 
 
-if __name__ == "__main__":
+def main() -> None:
     x = np.linspace(-0.8, 0.8, 40)
     _, stats = generate_trees_with_stats(max_depth=4, x_grid=x, dedupe_signatures=True)
 
@@ -16,3 +16,7 @@ if __name__ == "__main__":
         print(
             f"{row.depth}\t{row.generated}\t{row.valid}\t{row.deduplicated}\t{row.elapsed_seconds:.6f}"
         )
+
+
+if __name__ == "__main__":
+    main()
