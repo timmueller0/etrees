@@ -8,7 +8,7 @@ from etree.benchmark_registry import get_benchmark_registry
 from etree.benchmarks import run_recovery_suite
 
 
-if __name__ == "__main__":
+def main() -> None:
     cases = get_benchmark_registry()
     results = run_recovery_suite(cases)
 
@@ -25,3 +25,7 @@ if __name__ == "__main__":
     print("\nSummary by tier (mean best MSE)")
     for tier, mses in by_tier.items():
         print(f"  {tier:24s} {sum(mses) / len(mses):.3e}")
+
+
+if __name__ == "__main__":
+    main()

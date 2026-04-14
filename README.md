@@ -81,15 +81,26 @@ pip install -e .[dev]
 pytest
 ```
 
-Run demos:
+Run demos as modules:
 
 ```bash
-python examples/recover_native_expression.py
-python examples/toy_espace_demo.py
-python examples/benchmark_growth.py
-python examples/run_recovery_benchmark.py
-python examples/hybrid_affine_search_demo.py
+python -m examples.recover_native_expression
+python -m examples.toy_espace_demo
+python -m examples.benchmark_growth
+python -m examples.run_recovery_benchmark
+python -m examples.hybrid_affine_search_demo
 ```
+
+## How to run examples from fresh checkout
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .
+python -m examples.run_recovery_benchmark
+```
+
+All examples in `examples/` are supported via module execution (`python -m examples.<name>`).
 
 ## Notes on design
 
