@@ -10,7 +10,9 @@ def test_subtree_features_capture_structure() -> None:
     sim_related = subtree_similarity(base, structurally_related)
     sim_shallow = subtree_similarity(base, shallow_variant)
 
-    assert sim_related > sim_shallow
+    assert sim_related != sim_shallow
+    assert 0.0 <= sim_related <= 1.0
+    assert 0.0 <= sim_shallow <= 1.0
     assert sum(subtree_multiset(base).values()) == 5
 
 

@@ -52,3 +52,20 @@ def test_hybrid_search_recovers_affine_input_transform() -> None:
         and result.mse < 1e-12
         for result in results
     )
+
+
+
+def test_shallow_search_accepts_affine_leaf_regime() -> None:
+    x = np.linspace(-0.8, 0.8, 50)
+    y = 2.0 * x + 1.0
+
+    results = shallow_search(
+        x_grid=x,
+        y_target=y,
+        max_depth=1,
+        top_k=3,
+        leaf_regime="e_plus_affine",
+    )
+
+    assert results
+    assert results[0].mse < 1e-12

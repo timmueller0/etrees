@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from time import perf_counter
-from typing import Iterable, Sequence
+from typing import Iterable, Literal, Sequence
 
 import numpy as np
 
@@ -49,6 +49,19 @@ def affine_leaves(
             out.append(AffineLeaf(variable=variable, a=float(a), b=float(b)))
     return out
 
+LeafRegime = Literal["e_only", "e_plus_affine"]
+
+
+def _resolve_leaves(
+    leaves: Sequence[Expr] | None,
+    leaf_regime: LeafRegime,
+) -> list[Expr]:
+    if leaves is not None:
+        return list(leaves)
+    if leaf_regime == "e_plus_affine":
+        return [*default_leaves(), *affine_leaves()]
+    return default_leaves()
+
 
 def deduplicate_by_structure(exprs: Sequence[Expr]) -> list[Expr]:
     """Deduplicate expressions using canonical structural serialization."""
@@ -67,12 +80,14 @@ def generate_trees(
     max_depth: int,
     leaves: Sequence[Expr] | None = None,
     dedupe_structure: bool = True,
+    leaf_regime: LeafRegime = "e_only",
 ) -> list[Expr]:
     """Generate all E-trees with depth <= max_depth."""
     exprs, _ = generate_trees_with_stats(
         max_depth=max_depth,
         leaves=leaves,
         dedupe_structure=dedupe_structure,
+        leaf_regime=leaf_regime,
     )
     return exprs
 
@@ -84,6 +99,7 @@ def generate_trees_with_stats(
     dedupe_structure: bool = True,
     dedupe_signatures: bool = False,
     decimals: int = 8,
+    leaf_regime: LeafRegime = "e_only",
 ) -> tuple[list[Expr], GenerationStats]:
     """Generate E-trees and return per-depth growth statistics.
 
@@ -93,7 +109,7 @@ def generate_trees_with_stats(
     if max_depth < 1:
         return [], GenerationStats(per_depth=tuple())
 
-    leaves = list(leaves) if leaves is not None else default_leaves()
+    leaves = _resolve_leaves(leaves=leaves, leaf_regime=leaf_regime)
     if dedupe_structure:
         leaves = deduplicate_by_structure(leaves)
 

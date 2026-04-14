@@ -14,17 +14,18 @@ def main() -> None:
 
     for row in results:
         print(
-            f"{row.name:28s} tier={row.tier:24s} family={row.family:22s} "
-            f"exact={str(row.exact_recovered):5s} best_mse={row.best_mse:.3e} expr={row.best_expr}"
+            f"{row.name:28s} regime={row.regime:21s} tier={row.tier:24s} family={row.family:22s} "
+            f"exact={str(row.exact_recovered):5s} best_mse={row.best_mse:.3e} expr={row.best_expr} "
+            f"budget(depth={row.budget.max_depth},top_k={row.budget.top_k})"
         )
 
-    by_tier: dict[str, list[float]] = defaultdict(list)
+    by_group: dict[tuple[str, str], list[float]] = defaultdict(list)
     for row in results:
-        by_tier[row.tier].append(row.best_mse)
+        by_group[(row.tier, row.regime)].append(row.best_mse)
 
-    print("\nSummary by tier (mean best MSE)")
-    for tier, mses in by_tier.items():
-        print(f"  {tier:24s} {sum(mses) / len(mses):.3e}")
+    print("\nSummary by tier/regime (mean best MSE)")
+    for (tier, regime), mses in sorted(by_group.items()):
+        print(f"  {tier:24s} {regime:21s} {sum(mses) / len(mses):.3e}")
 
 
 if __name__ == "__main__":
