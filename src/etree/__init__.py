@@ -5,7 +5,14 @@ from etree.benchmarks import RecoveryCase, RecoveryResult, run_recovery_case, ru
 from etree.canonicalize import canonical_string
 from etree.eval import DomainError, EvaluationError, NonFiniteError, evaluate
 from etree.generate import DepthStats, GenerationStats, generate_trees_with_stats
-from etree.search import SearchReport, SearchResult, shallow_search, shallow_search_with_report
+from etree.search import (
+    HybridSearchResult,
+    SearchReport,
+    SearchResult,
+    hybrid_search_with_affine_input,
+    shallow_search,
+    shallow_search_with_report,
+)
 
 __all__ = [
     "Expr",
@@ -26,9 +33,11 @@ __all__ = [
     "GenerationStats",
     "generate_trees_with_stats",
     "SearchResult",
+    "HybridSearchResult",
     "SearchReport",
     "shallow_search",
     "shallow_search_with_report",
+    "hybrid_search_with_affine_input",
     "RecoveryCase",
     "RecoveryResult",
     "run_recovery_case",
