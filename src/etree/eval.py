@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Union
 
 import numpy as np
 
-from etree.ast import Constant, ENode, Expr, Variable
+from etree.ast import AffineLeaf, Constant, ENode, Expr, Variable
 
 
 class EvaluationError(Exception):
@@ -42,6 +41,11 @@ def evaluate(expr: Expr, x: ArrayLike) -> np.ndarray:
 
         if isinstance(node, Constant):
             return np.full_like(x_arr, fill_value=float(node.value), dtype=float)
+
+        if isinstance(node, AffineLeaf):
+            if node.variable != "x":
+                raise EvaluationError(f"Unsupported variable '{node.variable}' in affine leaf.")
+            return (float(node.a) * x_arr) + float(node.b)
 
         if isinstance(node, ENode):
             left = _eval(node.left)

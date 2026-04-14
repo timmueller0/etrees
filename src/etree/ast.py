@@ -7,7 +7,7 @@ Core operator:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Iterable, Iterator, Tuple, Union
+from typing import Iterator, Tuple, Union
 
 
 @dataclass(frozen=True)
@@ -33,6 +33,20 @@ class Constant:
 
 
 @dataclass(frozen=True)
+class AffineLeaf:
+    """Affine leaf node: a*variable + b."""
+
+    variable: str
+    a: float
+    b: float
+
+    def __str__(self) -> str:
+        a_s = str(int(self.a)) if float(self.a).is_integer() else str(self.a)
+        b_s = str(int(self.b)) if float(self.b).is_integer() else str(self.b)
+        return f"({a_s}*{self.variable}+{b_s})"
+
+
+@dataclass(frozen=True)
 class ENode:
     """Binary E operator node: exp(left) - log(right)."""
 
@@ -43,7 +57,7 @@ class ENode:
         return f"E({self.left}, {self.right})"
 
 
-Expr = Union[Variable, Constant, ENode]
+Expr = Union[Variable, Constant, AffineLeaf, ENode]
 
 
 def pretty(expr: Expr) -> str:
@@ -53,14 +67,14 @@ def pretty(expr: Expr) -> str:
 
 def depth(expr: Expr) -> int:
     """Return max node depth (leaf depth = 1)."""
-    if isinstance(expr, (Variable, Constant)):
+    if isinstance(expr, (Variable, Constant, AffineLeaf)):
         return 1
     return 1 + max(depth(expr.left), depth(expr.right))
 
 
 def size(expr: Expr) -> int:
     """Return total number of nodes in the tree."""
-    if isinstance(expr, (Variable, Constant)):
+    if isinstance(expr, (Variable, Constant, AffineLeaf)):
         return 1
     return 1 + size(expr.left) + size(expr.right)
 
@@ -86,3 +100,8 @@ def leaf_x() -> Variable:
 def leaf_one() -> Constant:
     """Convenience constructor for constant 1."""
     return Constant(1.0)
+
+
+def leaf_affine(a: float = 1.0, b: float = 0.0, variable: str = "x") -> AffineLeaf:
+    """Convenience constructor for affine leaf a*x + b."""
+    return AffineLeaf(variable=variable, a=float(a), b=float(b))

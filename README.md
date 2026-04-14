@@ -14,6 +14,7 @@ The project focuses on fast iteration for early-stage symbolic-expression experi
 - A small AST with:
   - `Variable(name)`
   - `Constant(value)`
+  - `AffineLeaf(variable, a, b)` for `a*x+b`
   - `ENode(left, right)`
 - Utilities for:
   - pretty-printing
@@ -28,11 +29,17 @@ The project focuses on fast iteration for early-stage symbolic-expression experi
 - Exhaustive tree generation up to configurable depth.
 - Optional signature deduplication using sampled outputs.
 - Shallow search that ranks formulas by MSE against target samples.
+- Hybrid search mode: structural brute force + affine input transform sweep (`x' = a*x + b`).
 
 ### 3) Retrieval / representation experiments
 - Subtree-multiset features for each formula.
 - Similarity via multiset-Jaccard overlap.
 - Baseline naive token-set similarity for contrast.
+
+### 4) Benchmarking and diagnostics
+- Per-depth generation telemetry via `generate_trees_with_stats`.
+- Search reports that include growth diagnostics (`shallow_search_with_report`).
+- Recovery benchmark harness (`RecoveryCase`, `run_recovery_suite`).
 
 ## Project layout
 
@@ -47,6 +54,8 @@ etree/
     eval.py
     generate.py
     search.py
+    benchmarks.py
+    canonicalize.py
     features.py
     utils.py
   tests/
@@ -58,6 +67,9 @@ etree/
   examples/
     recover_native_expression.py
     toy_espace_demo.py
+    benchmark_growth.py
+    run_recovery_benchmark.py
+    hybrid_affine_search_demo.py
 ```
 
 ## Quick start
@@ -74,6 +86,9 @@ Run demos:
 ```bash
 python examples/recover_native_expression.py
 python examples/toy_espace_demo.py
+python examples/benchmark_growth.py
+python examples/run_recovery_benchmark.py
+python examples/hybrid_affine_search_demo.py
 ```
 
 ## Notes on design
