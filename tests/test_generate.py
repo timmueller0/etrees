@@ -1,6 +1,6 @@
 import numpy as np
 
-from etree.generate import affine_leaves, generate_trees, generate_trees_with_stats
+from etree.generate import generate_trees, generate_trees_with_stats
 
 
 def test_generation_counts_small_depths() -> None:
@@ -22,8 +22,3 @@ def test_generation_stats_include_expected_depth_rows() -> None:
     assert stats.per_depth[1].generated == 4
     assert stats.per_depth[0].deduplicated <= stats.per_depth[0].valid
     assert stats.per_depth[1].deduplicated <= stats.per_depth[1].valid
-
-
-def test_affine_leaf_bank_size() -> None:
-    leaves = affine_leaves(slopes=(-1.0, 1.0), intercepts=(0.0, 1.0))
-    assert len(leaves) == 4

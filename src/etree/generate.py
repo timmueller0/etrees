@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from time import perf_counter
-from typing import Iterable, Sequence
+from typing import Sequence
 
 import numpy as np
 
@@ -69,11 +69,7 @@ def generate_trees(
     dedupe_structure: bool = True,
 ) -> list[Expr]:
     """Generate all E-trees with depth <= max_depth."""
-    exprs, _ = generate_trees_with_stats(
-        max_depth=max_depth,
-        leaves=leaves,
-        dedupe_structure=dedupe_structure,
-    )
+    exprs, _ = generate_trees_with_stats(max_depth=max_depth, leaves=leaves)
     return exprs
 
 
@@ -82,7 +78,6 @@ def generate_trees_with_stats(
     leaves: Sequence[Expr] | None = None,
     x_grid: np.ndarray | None = None,
     dedupe_signatures: bool = False,
-    dedupe_structure: bool = True,
     decimals: int = 8,
 ) -> tuple[list[Expr], GenerationStats]:
     """Generate E-trees and return per-depth growth statistics.
