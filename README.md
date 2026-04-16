@@ -118,3 +118,36 @@ This code intentionally prioritizes:
    - Add caching/memoization, grammar constraints, and train/validation splits to reduce overfitting and speed up larger sweeps.
 3. **Richer E-space representations**
    - Add canonicalization, weighted subtree kernels, and embedding-style retrieval features for better structural similarity experiments.
+
+## Reduced benchmark smoke snapshot (April 16, 2026)
+
+Generated with:
+
+```bash
+PYTHONPATH=src python -m examples.run_reduced_benchmark --out outputs/reduced_benchmark_smoke.csv
+PYTHONPATH=src python -m examples.analyze_reduced_benchmark --in outputs/reduced_benchmark_smoke.csv
+```
+
+### Technical summary (research-facing)
+
+| Slice | Exact rate | Approx rate | Median MSE | Median runtime |
+|---|---:|---:|---:|---:|
+| hybrid_affine @ wide | 0.32 | 0.00 | 8.41e-03 | 4.38e+00 s |
+| e_only @ wide | 0.32 | 0.00 | 2.49e-01 | 3.06e-03 s |
+| baseline @ wide | 0.08 | 0.24 | 1.09e-02 | 1.80e-04 s |
+| hybrid_affine (all rows) | 0.23 | 0.00 | 1.46e-02 | 1.49e-02 s |
+| e_only (all rows) | 0.23 | 0.00 | 2.49e-01 | 4.13e-04 s |
+| baseline (all rows) | 0.08 | 0.23 | 6.60e-03 | 1.36e-04 s |
+
+Additional diagnostics now included in each row:
+- `domain_clipped` (whether the requested interval was clipped to the case domain),
+- `effective_interval` (actual `[lo, hi]` used),
+- `useful_fit_label` (`exact`, `near`, `approx`, `miss`).
+
+### Non-technical summary
+
+| What we tested | What happened |
+|---|---|
+| Narrow/normal/wide x-ranges and small/medium/large depth limits | Wider ranges with hybrid search gave the best chance of exact matches in this smoke run. |
+| Three modes (`e_only`, `hybrid_affine`, `baseline`) | `baseline` is much faster, but mostly returns rough approximations rather than exact symbolic recovery. |
+| Focused growth/saturation sweep (3 intervals x 3 depths) | Going deeper improves recovery; in this specific smoke run there were **no** growth targets where wide was exact but both tight/default were non-exact. |
