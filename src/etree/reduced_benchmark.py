@@ -36,15 +36,31 @@ FIXED_INTERVAL_BUDGETS: tuple[IntervalBudget, ...] = (
     IntervalBudget(interval="wide", x_min=-1.2, x_max=1.2, max_depth=3),
 )
 
+FOCUSED_SWEEP_INTERVALS: tuple[tuple[str, float, float], ...] = (
+    ("tight", -0.6, 0.6),
+    ("default", -0.8, 0.8),
+    ("wide", -1.2, 1.2),
+)
+
+FOCUSED_SWEEP_DEPTHS: tuple[int, ...] = (1, 2, 3)
 
 
+def build_growth_sweep_budgets(num_points: int = 60) -> tuple[IntervalBudget, ...]:
+    """Cross product of 3 intervals x 3 depth budgets."""
+    return tuple(
+        IntervalBudget(interval=interval, x_min=x_min, x_max=x_max, max_depth=max_depth, num_points=num_points)
+        for interval, x_min, x_max in FOCUSED_SWEEP_INTERVALS
+        for max_depth in FOCUSED_SWEEP_DEPTHS
+    )
 
-def _resolve_grid(case: RecoveryCase, budget: IntervalBudget) -> np.ndarray:
+def _resolve_grid(case: RecoveryCase, budget: IntervalBudget) -> tuple[np.ndarray, float, float, bool]:
     lo = max(budget.x_min, case.x_min)
     hi = min(budget.x_max, case.x_max)
+    clipped = (lo != budget.x_min) or (hi != budget.x_max)
     if lo >= hi:
         lo, hi = case.x_min, case.x_max
-    return np.linspace(lo, hi, budget.num_points)
+        clipped = True
+    return np.linspace(lo, hi, budget.num_points), lo, hi, clipped
 
 def _target_values(case: RecoveryCase, x_grid: np.ndarray) -> np.ndarray:
     if case.target is not None:
@@ -75,11 +91,31 @@ def _recovery_label(case: RecoveryCase, mse: float) -> str:
     return "miss"
 
 
+def _useful_fit_label(case: RecoveryCase, mse: float) -> str:
+    """Diagnostic quality bucket with explicit exact/near/approx/miss split."""
+    if not np.isfinite(mse):
+        return "miss"
+
+    exact_tol = 1e-12 if case.target is not None else 1e-10
+    near_tol = 1e-5 if case.tier == "negative_control" else 1e-6
+    approx_tol = 5e-3 if case.tier == "negative_control" else 1e-3
+
+    if mse <= exact_tol:
+        return "exact"
+    if mse <= near_tol:
+        return "near"
+    if mse <= approx_tol:
+        return "approx"
+    return "miss"
+
+
 def _row(
     *,
     case: RecoveryCase,
     regime: Regime,
     interval: str,
+    domain_clipped: bool,
+    effective_interval: str,
     max_depth: int,
     generated_count: int,
     valid_count: int,
@@ -90,12 +126,15 @@ def _row(
     winner_depth: int,
     winner_size: int,
     recovery_label: str,
+    useful_fit_label: str,
 ) -> dict[str, object]:
     return {
         "target": case.name,
         "family": case.family,
         "regime": regime,
         "interval": interval,
+        "domain_clipped": domain_clipped,
+        "effective_interval": effective_interval,
         "max_depth": max_depth,
         "generated_count": generated_count,
         "valid_count": valid_count,
@@ -106,6 +145,7 @@ def _row(
         "winner_depth": winner_depth,
         "winner_size": winner_size,
         "recovery_label": recovery_label,
+        "useful_fit_label": useful_fit_label,
     }
 
 
@@ -119,8 +159,9 @@ def run_reduced_suite(
 
     for case in cases:
         for budget in budgets:
-            x_grid = _resolve_grid(case, budget)
+            x_grid, lo, hi, domain_clipped = _resolve_grid(case, budget)
             y_target = _target_values(case, x_grid)
+            effective_interval = f"[{lo:.6g}, {hi:.6g}]"
 
             # E-only
             start = perf_counter()
@@ -139,6 +180,8 @@ def run_reduced_suite(
                     case=case,
                     regime="e_only",
                     interval=budget.interval,
+                    domain_clipped=domain_clipped,
+                    effective_interval=effective_interval,
                     max_depth=budget.max_depth,
                     generated_count=sum(s.generated for s in report.generation_stats.per_depth),
                     valid_count=sum(s.valid for s in report.generation_stats.per_depth),
@@ -149,6 +192,7 @@ def run_reduced_suite(
                     winner_depth=depth(best.expr) if best is not None else 0,
                     winner_size=size(best.expr) if best is not None else 0,
                     recovery_label=_recovery_label(case, best.mse if best is not None else float("inf")),
+                    useful_fit_label=_useful_fit_label(case, best.mse if best is not None else float("inf")),
                 )
             )
 
@@ -169,6 +213,8 @@ def run_reduced_suite(
                     case=case,
                     regime="hybrid_affine",
                     interval=budget.interval,
+                    domain_clipped=domain_clipped,
+                    effective_interval=effective_interval,
                     max_depth=budget.max_depth,
                     generated_count=sum(s.generated for s in report_h.generation_stats.per_depth),
                     valid_count=sum(s.valid for s in report_h.generation_stats.per_depth),
@@ -179,6 +225,7 @@ def run_reduced_suite(
                     winner_depth=depth(best_h.expr) if best_h is not None else 0,
                     winner_size=size(best_h.expr) if best_h is not None else 0,
                     recovery_label=_recovery_label(case, best_h.mse if best_h is not None else float("inf")),
+                    useful_fit_label=_useful_fit_label(case, best_h.mse if best_h is not None else float("inf")),
                 )
             )
 
@@ -191,6 +238,8 @@ def run_reduced_suite(
                     case=case,
                     regime="baseline",
                     interval=budget.interval,
+                    domain_clipped=domain_clipped,
+                    effective_interval=effective_interval,
                     max_depth=budget.max_depth,
                     generated_count=0,
                     valid_count=0,
@@ -201,6 +250,7 @@ def run_reduced_suite(
                     winner_depth=1,
                     winner_size=1,
                     recovery_label=_recovery_label(case, fit.mse),
+                    useful_fit_label=_useful_fit_label(case, fit.mse),
                 )
             )
 

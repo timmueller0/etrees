@@ -31,6 +31,8 @@ def test_reduced_suite_schema_and_regimes() -> None:
         "family",
         "regime",
         "interval",
+        "domain_clipped",
+        "effective_interval",
         "max_depth",
         "generated_count",
         "valid_count",
@@ -41,6 +43,7 @@ def test_reduced_suite_schema_and_regimes() -> None:
         "winner_depth",
         "winner_size",
         "recovery_label",
+        "useful_fit_label",
     }
 
 
@@ -68,3 +71,4 @@ def test_reduced_suite_csv_and_analysis_ingest(tmp_path: Path) -> None:
         env={**os.environ, "PYTHONPATH": "src"},
     )
     assert "Main empirical patterns" in proc.stdout
+    assert "Recovery by domain_clipped" in proc.stdout
